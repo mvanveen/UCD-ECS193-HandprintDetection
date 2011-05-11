@@ -34,7 +34,7 @@ def f(obj):
   logging.error( 'Processing ' + str(obj[0]) + '...')
   return(mahotas.features.haralick(read(obj[0])).mean(0), obj[1])
 
-p = Pool(10)
+p = Pool(6)
 results = p.map(f, imagesets)
 
 features = [feature for feature, _ in results]
