@@ -17,7 +17,6 @@ model = learner.train(*features)
 
 
 pickle.dump(model, open('trainer.pik', 'w'))
-
 cmat,names, preds = milk.nfoldcrossvalidation(*features,
                                               classifier=learner,
                                               return_predictions=1)
