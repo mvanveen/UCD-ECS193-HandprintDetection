@@ -1,12 +1,10 @@
 import datetime
 import glob
-from   itertools import chain, groupby
+from   itertools import chain
 import logging
 from   multiprocessing import Pool
-from   operator        import add
 import os
 import pickle
-import random
 import sys
 
 import mahotas.surf
@@ -14,7 +12,9 @@ import mahotas.surf
 then = datetime.datetime.now()
 
 dirs = sys.argv[1:]
-read = lambda x: mahotas.imread(x)
+read   = lambda x: mahotas.imread(x)
+pixels = lambda shape: shape[0] * shape[1]
+
 dir  = (len(sys.argv) > 1 and sys.argv[1]) or '.'
 
 filesets  = ["a","k","m"]
@@ -25,30 +25,24 @@ imagesets = [[[ (fname, fprefix) for fname in
                 ) ] for fprefix in filesets ]
                     for dir in dirs ]
 
-compress  = lambda y: [x for x in chain(*y)]
+compress = lambda y: [x for x in chain(*y)]
 imagesets = compress(compress(imagesets))
-
-f = lambda x, iter: filter(lambda y: y[1] == x, iter)
-minimum   = min([len(f(y, imagesets)) for y in filesets])
-imagesets = reduce(add, [random.sample(f(y, imagesets), minimum) for y in filesets])
-
 print len(imagesets)
-print minimum
-
-#results = [ (mahotas.features.haralick(read(obj[0])).mean(0), obj[1]) 
-#              for obj in imagesets]
 
 def f(obj): 
+  img = read(obj[0])
   logging.error( 'Processing ' + str(obj[0]) + '...')
-  return(mahotas.features.haralick(read(obj[0])).mean(0), obj[1])
+  results = (mahotas.features.lbp(img, 16, pixels(img.shape)), obj[1])
+  logging.error(results)
+  return(results)
 
-p = Pool(4)
+p = Pool(6)
 results = p.map(f, imagesets)
 
 features = [feature for feature, _ in results]
 labels   = [label for _, label in results]
 
-with open('features_heralik.pik', 'w') as file:
+with open('features_lbp.pik', 'w') as file:
   pickle.dump((features, labels), file)
 
 print results
